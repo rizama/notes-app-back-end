@@ -2,14 +2,12 @@ const { nanoid } = require('nanoid');
 const notes = require('./notes');
 
 const addNoteHandler = (request, h) => {
-    // eslint-disable-next-line prefer-const
-    let { title = 'untitled', tags, body } = request.payload;
-    if (title === '') {
-        title = 'untitled';
-    }
+    const { title = 'untitled', tags, body } = request.payload;
+
     const id = nanoid(16);
     const createdAt = new Date().toISOString();
     const updatedAt = createdAt;
+
     const newNote = {
         title,
         tags,
@@ -18,6 +16,7 @@ const addNoteHandler = (request, h) => {
         createdAt,
         updatedAt,
     };
+
     notes.push(newNote);
 
     const isSuccess = notes.filter((note) => note.id === id).length > 0;
@@ -62,6 +61,7 @@ const getNoteByIdHandler = (request, h) => {
             },
         };
     }
+
     const response = h.response({
         status: 'fail',
         message: 'Catatan tidak ditemukan',
@@ -86,6 +86,7 @@ const editNoteByIdHandler = (request, h) => {
             body,
             updatedAt,
         };
+
         const response = h.response({
             status: 'success',
             message: 'Catatan berhasil diperbarui',
@@ -93,6 +94,7 @@ const editNoteByIdHandler = (request, h) => {
         response.code(200);
         return response;
     }
+
     const response = h.response({
         status: 'fail',
         message: 'Gagal memperbarui catatan. Id tidak ditemukan',
@@ -120,7 +122,7 @@ const deleteNoteByIdHandler = (request, h) => {
         status: 'fail',
         message: 'Catatan gagal dihapus. Id tidak ditemukan',
     });
-
+    response.code(404);
     return response;
 };
 
