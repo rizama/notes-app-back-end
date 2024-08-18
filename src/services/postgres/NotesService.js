@@ -58,7 +58,7 @@ class NotesService {
 
         if (!result.rows.length) {
             throw new NotFoundError(
-                'Gagal memperbarui catatan. Id tidak ditemukan'
+                'Gagal memperbarui catatan. Id tidak ditemukan',
             );
         }
     }
@@ -73,7 +73,7 @@ class NotesService {
 
         if (!result.rows.length) {
             throw new NotFoundError(
-                'Catatan gagal dihapus. Id tidak ditemukan'
+                'Catatan gagal dihapus. Id tidak ditemukan',
             );
         }
     }
