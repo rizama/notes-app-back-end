@@ -1,12 +1,16 @@
 require('dotenv').config();
 const Hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
+const path = require('path');
+const Inert = require('@hapi/inert');
 
 // Plugins
 const notes = require('./api/notes');
 const users = require('./api/users');
 const authentications = require('./api/authentications');
 const collaborations = require('./api/collaborations');
+const _exports = require('./api/exports');
+const uploads = require('./api/uploads');
 
 // Services
 // const NotesService = require('./services/inMemory/NotesService');
@@ -15,21 +19,36 @@ const UsersService = require('./services/postgres/UsersService');
 const AuthenticationsService = require('./services/postgres/AuthenticationsService');
 const TokenManager = require('./tokenize/TokenManager');
 const CollaborationsService = require('./services/postgres/CollaborationsService');
+const ProducerService = require('./services/rabbitmq/ProducerService');
+const StorageService = require('./services/storage/StorageService'); // storage local
+// const StorageService = require('./services/S3/StorageService'); // storage S3
+const CacheService = require('./services/redis/CacheService');
 
 // Validators
 const NotesValidator = require('./validator/notes');
 const UsersValidator = require('./validator/users');
 const AuthenticationsValidator = require('./validator/authentications');
 const CollaborationsValidator = require('./validator/collaborations');
+const ExportsValidator = require('./validator/exports');
+const UploadsValidator = require('./validator/uploads');
 
 // Error Handling
 const ClientError = require('./exceptions/ClientError');
 
 const init = async () => {
-    const collaborationsService = new CollaborationsService();
-    const notesService = new NotesService(collaborationsService);
+    const cacheService = new CacheService();
+    const collaborationsService = new CollaborationsService(cacheService);
+    const notesService = new NotesService(collaborationsService, cacheService);
     const usersService = new UsersService();
     const authenticationsService = new AuthenticationsService();
+
+    // storage local
+    const storageService = new StorageService(
+        path.resolve(__dirname, 'api/uploads/file/images')
+    );
+
+    // storage S3
+    // const storageService = new StorageService();
 
     const server = Hapi.server({
         port: process.env.PORT,
@@ -45,6 +64,9 @@ const init = async () => {
     await server.register([
         {
             plugin: Jwt,
+        },
+        {
+            plugin: Inert,
         },
     ]);
 
@@ -95,6 +117,20 @@ const init = async () => {
                 collaborationsService,
                 notesService,
                 validator: CollaborationsValidator,
+            },
+        },
+        {
+            plugin: _exports,
+            options: {
+                service: ProducerService,
+                validator: ExportsValidator,
+            },
+        },
+        {
+            plugin: uploads,
+            options: {
+                service: storageService,
+                validator: UploadsValidator,
             },
         },
     ]);

@@ -15,6 +15,7 @@
         "linebreak-style": ["error", "windows"],
         "no-underscore-dangle": "off",
         "comma-dangle": "off",
-        "operator-linebreak": "off"
+        "operator-linebreak": "off",
+        "import/no-extraneous-dependencies": "off"
     }
 }
